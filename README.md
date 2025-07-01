@@ -48,11 +48,6 @@ In Linux, threads are implemented using the **POSIX Threads (pthreads)** standar
 | `pthread_mutex_lock()`     | Acquire a lock                          |
 | `pthread_mutex_unlock()`   | Release a lock                          |
 | `pthread_mutex_destroy()`  | Destroy a mutex                         |
-| `pthread_cond_init()`      | Initialize a condition variable         |
-| `pthread_cond_wait()`      | Block thread until a condition is true  |
-| `pthread_cond_signal()`    | Wake up one waiting thread              |
-| `pthread_cond_broadcast()` | Wake up all waiting threads             |
-| `pthread_cond_destroy()`   | Destroy a condition variable            |
 
 ---
 
