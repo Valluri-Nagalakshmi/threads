@@ -51,35 +51,7 @@
 
 ---
 
-##  Threads Provided By:
-### 1. **User-Level Threads (ULT):**
-- Provided by **User-space libraries** (NOT the OS).
-- Example:
-  - POSIX Threads (pthreads) in user mode (if implemented as ULT)
-  - Java Virtual Machine (JVM) threads
-- Fast to create but limited in capability.
-- Entire process blocks if one thread blocks.
 
-### 2. **Kernel-Level Threads (KLT):**
-- Provided by **Operating System kernel**.
-- OS manages thread scheduling using system calls.
-- Example:
-  - Linux Native POSIX Threads (NPTL)
-  - Windows Threads
-- Supports true parallel execution on multi-core systems.
-
-| **Thread Type**     | **Provided by**             |
-|---------------------|-----------------------------|
-| User-Level Thread    | Thread Libraries (User Space)|
-| Kernel-Level Thread  | Operating System Kernel     |
-
----
-
-###  Hybrid Models:
-- Some systems use hybrid models for better flexibility.
-- Example: Modern Linux systems map pthreads to kernel threads.
-
----
 
 ###  Linux Threads:
 - In modern Linux, threads **are provided by the Linux kernel**.
