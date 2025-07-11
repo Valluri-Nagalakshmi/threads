@@ -58,13 +58,6 @@
 - Implemented using the `clone()` system call.
 - Typically not used directly in apps — instead, libraries like **pthreads** are used.
 
-**Flow:**
-```
-
-Application → pthread → clone → Linux Kernel Scheduler
-
-````
-
 ---
 
 ##  Why Not Directly Use `clone()`?
