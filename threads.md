@@ -160,7 +160,6 @@ int pthread_create(pthread_t *thread,
 
 * `pthread_create()` is non-blocking.
 * Use `pthread_join()` to wait for thread completion.
-* Arguments are passed via `void *` and casted inside thread function.
 
 ---
 
@@ -197,11 +196,6 @@ int pthread_join(pthread_t thread, void **retval);
 * `EINVAL` → Thread not joinable
 * `EDEADLK` → Deadlock detected
 
-### Internals:
-
-* Checks thread joinability.
-* Blocks caller until thread terminates.
-* Cleans up thread resources (stack, descriptors).
 
 ---
 
