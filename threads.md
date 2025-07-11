@@ -129,7 +129,7 @@ int pthread_create(pthread_t *thread,
 ###  Return Values:
 
 * `0` → Success
-* Non-zero → Error (like `EAGAIN`, `EINVAL`, etc.)
+* Non-zero → Error 
 
 ---
 
