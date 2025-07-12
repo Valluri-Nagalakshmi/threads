@@ -37,6 +37,9 @@
 | Parallelism     | Cannot provide parallel execution           | Supports parallelism (multi-core CPUs)          |
 | Context Switch  | No context switching needed                 | Needs context switching for concurrency        |
 
+Threads execute faster than functions only when tasks are parallelizable.
+Otherwise, for sequential or small tasks, using only functions is faster and safer.
+
 ---
 
 ##  Difference Between Process and Thread:
