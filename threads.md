@@ -176,9 +176,6 @@ So, `pthread_create()` is just a wrapper around `clone()` with additional book k
 
 ---
 
-Here's the **remaining part** of your content in `.md` (Markdown) format, continuing from where we left off:
-
-````markdown
 # pthread_join()
 
 ## 1. What is pthread_join()?
@@ -533,7 +530,7 @@ Final counter value: 200000
 
 ---
 
-# Thread Attributes Summary
+# Thread Attributes 
 
 In POSIX pthreads, thread attributes are represented using the `pthread_attr_t` structure. These attributes control the behavior of a thread when it's created using `pthread_create()`.
 
@@ -595,11 +592,6 @@ pthread_setname_np(pthread_self(), "WorkerThread");
 ```
 
 * Useful for debugging (htop, gdb, logs)
-
-## 7. Thread Group (Java-only Concept)
-
-* Not available in C/pthreads.
-* Java allows grouping of threads for management.
 
 ---
 
