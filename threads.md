@@ -1,163 +1,237 @@
-
-# Threads and Processes in Linux
-
-##  What is a Process?
-- A **process** is an independent program in execution.
-- Has its own **memory space** and **system resources**.
-- Can contain **multiple threads** inside it.
+# Threads
+## What is a Process?
+- A process is an independent program in execution.
+- Has its own memory space and system resources.
+- Can contain multiple threads inside it.
 - Each process is managed by the OS separately.
-
-The OS tracks each process using a **Process Control Block (PCB)**.
-
----
+> The operating system keeps track of each process using a Process Control Block (PCB).
 
 ## What is a Thread?
-- A **thread** is the smallest unit of execution within a process.
-- Also known as a **lightweight process**.
-
-### Threads within a process **share**:
-- Code section
-- Data section
-- OS resources (e.g., files, signals)
-
-### Each thread has its own:
-- Program Counter (PC)
-- Registers
-- Stack
-
----
+- A thread is the smallest unit of execution within a process.
+- It’s sometimes called a lightweight process.
+- Threads within the same process share:
+  - Code section
+  - Data section
+  - OS resources (files, signals)
+- Each thread has its own:
+  - Program Counter (PC)
+  - Register set
+  - Stack (for function calls)
 
 ## What is a Function?
-- A **function** is a block of code designed to perform a specific task.
-- Organizes code and avoids repetition.
-- Runs in the **same execution flow** as the caller.
+- A function is a block of code designed to perform a specific task.
+- It’s used to organize code and avoid repetition.
+- Functions are called by the program to execute certain logic, and they return control back to the caller once done.
+
+## Difference Between Functions and Threads
+
+| Feature      | Function                                | Thread                                       |
+|--------------|------------------------------------------|----------------------------------------------|
+| Purpose      | Organizes code into reusable blocks      | Executes parts of a program concurrently     |
+| Execution    | Runs within a single flow of control     | Runs concurrently with other threads         |
+| Memory       | Shares stack with main flow unless recursion happens | Has its own stack and registers, shares code/data |
+| Parallelism  | Cannot provide parallel execution        | Supports parallelism (on multi-core CPUs)    |
+| Context Switch | No context switching needed            | Needs context switching for concurrent execution |
+
+### If tasks are small and/or sequential
+- Functions are faster
+- Threads add overhead for creation, context switching, and synchronization
+
+### If tasks are independent and CPU/I/O heavy
+- Threads are faster (due to parallel execution)
+- Threads run on multiple cores → simultaneous execution.
+
+## Difference Between Process and Thread
+
+| Feature          | Process                     | Thread                                          |
+|------------------|-----------------------------|-------------------------------------------------|
+| Memory Space     | Separate (isolated) memory  | Shares memory with other threads in same process|
+| Dependency       | Independent                 | Dependent on the process (cannot exist alone)   |
+| Creation Cost    | Higher (more overhead)      | Lower (lightweight)                             |
+| Communication    | Complex (needs IPC mechanisms) | Easy (shares memory space)                    |
+| Parallelism      | True parallelism possible (multi-process) | Parallelism within a process (multi-threading) |
+
+### In modern Linux systems, threads ARE provided by the Linux kernel itself.
+- Linux does provide threads, but they are treated as lightweight processes internally.
+- In Linux, threads are implemented using kernel-level mechanisms.
+- Specifically, Linux uses the `clone()` system call to create threads.
+- You don't directly call `clone()` in most applications.
+- Instead, you use a thread library like pthreads (POSIX Threads).
+- `pthread` provides easy APIs like `pthread_create()` to create threads.
+- Internally, pthreads uses the Linux `clone()` system call to create threads.
+
+## Why We Don't Directly Use `clone()` for Threads:
+
+### 1. Complexity of `clone()` API:
+- `clone()` is a low-level system call that requires complex parameters:
+  - You must manually set:
+    - Function pointers
+    - Stack locations
+    - Flags for resource sharing
+- You must carefully allocate and manage the thread stack manually.
+
+# What is pthread Library?
+- `pthread` stands for POSIX Threads.
+- It is a threading library for C/C++ in Unix-like operating systems (Linux, macOS).
+- Used for multi-threaded programming.
+
+## What does pthread provide?
+- Functions to:
+  - Create and terminate threads (`pthread_create`, `pthread_exit`)
+  - Synchronize threads (`pthread_join`, mutexes, condition variables)
+  - Manage thread attributes (stack size, detach state, etc.)
+
+## Why Use pthread?
+- To write parallel or concurrent programs.
+- Makes efficient use of multi-core CPUs.
+- Handles background tasks, I/O, computation-heavy tasks in separate threads.
+- Used in system software, networking apps, embedded systems, etc.
+
+## Example pthread Functions
+
+| Function             | Purpose                                                                           |
+|----------------------|-----------------------------------------------------------------------------------|
+| `pthread_create()`   | Creates a new thread and starts its execution.                                    |
+| `pthread_join()`     | Waits for a specific thread to finish execution.                                  |
+| `pthread_exit()`     | Terminates the calling thread and optionally returns a value.                     |
+| `pthread_detach()`   | Marks a thread as detached; its resources are released automatically after it terminates (no join needed). |
+| `pthread_mutex_*()`  | Provides mutex (mutual exclusion) operations to protect shared resources from concurrent access. |
+| `pthread_cond_*()`   | Manages condition variables for thread synchronization (signal/wait mechanisms).  |
+| `pthread_attr_*()`   | Sets thread attributes like stack size, scheduling policy, and priority before creating threads. |
+| `pthread_self()`, `pthread_equal()` | Gets the calling thread’s ID and compares thread IDs.             |
 
 ---
 
-## Difference: Function vs Thread
+## 1. What is pthread_create()?
 
-| Feature        | Function                                   | Thread                                          |
-|----------------|--------------------------------------------|--------------------------------------------------|
-| Purpose        | Code organization                         | Parallel/concurrent execution                    |
-| Execution      | Single flow                               | Concurrent (runs with other threads)             |
-| Memory         | Uses same stack                           | Own stack, shared code/data                      |
-| Parallelism    | No                                         | Yes (on multi-core systems)                      |
-| Context Switch | Not needed                                | Requires context switching                       |
+`pthread_create()` is a POSIX function that creates a new thread within the calling process.
 
-Use **functions** for small/sequential tasks, and **threads** for parallel/independent work.
+**Purpose:**  
+To run a function (your logic) in parallel with the main thread.
 
----
+## 2. Function Prototype
 
-## Difference: Process vs Thread
-
-| Feature          | Process                         | Thread                               |
-|------------------|----------------------------------|---------------------------------------|
-| Memory Space     | Separate                        | Shared with other threads             |
-| Dependency       | Independent                     | Dependent on process                  |
-| Creation Cost    | High                            | Low (lightweight)                     |
-| Communication    | Complex (IPC needed)            | Easy (shared memory)                  |
-| Parallelism      | Across processes                | Inside a single process               |
-
----
-
-## Threads in Linux
-- Threads in Linux are created using the **`clone()`** system call.
-- Each thread is a **lightweight process** (uses shared resources).
-- **`pthread` library** (POSIX threads) provides user-friendly APIs for threads.
-
----
-
-## What is `pthread` Library?
-- Stands for **POSIX Threads**
-- Used for **multi-threaded programming** in Unix/Linux
-- Internally uses `clone()` but hides complexity
-
-### `pthread` Provides:
-- Thread creation and termination: `pthread_create()`, `pthread_exit()`
-- Thread synchronization: `pthread_join()`, `pthread_mutex_*`, `pthread_cond_*`
-- Attribute management: `pthread_attr_*`
-
----
-##  Example `pthread` Functions
-
-| Function                        | Purpose                                                                 |
-|----------------------------------|-------------------------------------------------------------------------|
-| `pthread_create()`              | Creates a new thread and starts its execution.                          |
-| `pthread_join()`                | Waits for a specific thread to finish execution.                        |
-| `pthread_exit()`                | Terminates the calling thread and optionally returns a value.           |
-| `pthread_detach()`              | Marks a thread as detached; resources are released automatically after it terminates (no join needed). |
-| `pthread_mutex_*()`             | Provides mutex (mutual exclusion) operations to protect shared resources from concurrent access. |
-| `pthread_cond_*()`              | Manages condition variables for thread synchronization (signal/wait mechanisms). |
-| `pthread_attr_*()`              | Sets thread attributes like stack size, scheduling policy, and priority before creating threads. |
-| `pthread_self()`, `pthread_equal()` | Gets the calling thread’s ID and compares thread IDs  |
-
----
-
-## `pthread_create()`
-
-### Prototype:
-```
+```c
 int pthread_create(pthread_t *thread,
                    const pthread_attr_t *attr,
-                   void *(*start_routine)(void *),
+                   void *(*start_routine) (void *),
                    void *arg);
 ````
 
-| Parameter       | Description                            |
-| --------------- | -------------------------------------- |
-| `thread`        | Stores thread ID                       |
-| `attr`          | Thread attributes (`NULL` for default) |
-| `start_routine` | Function to execute in new thread      |
-| `arg`           | Argument passed to the thread function |
+| Parameter        | Meaning                                              |
+| ---------------- | ---------------------------------------------------- |
+| \*thread         | Returns thread ID (`pthread_t`)                      |
+| \*attr           | Thread attributes (pass NULL for default attributes) |
+| \*start\_routine | Pointer to the function to execute in the thread     |
+| \*arg            | Argument passed to the thread function (can be NULL) |
+
+## 3. What Does It Return?
+
+* `0` → Success
+* Non-zero → Error (e.g. `EINVAL`, `ENOMEM`, `EAGAIN`)
+
+Use it like:
+
+```c
+if (pthread_create(&tid, NULL, my_function, NULL) != 0) {
+    perror("Thread creation failed");
+}
+```
+
+## 4. How `pthread_create()` Internally Works
+
+Internally:
+
+1. `pthread_create()` calls the `clone()` system call (not `fork()`).
+2. It passes special flags like:
+   `CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD`
+   → These tell the kernel to create a lightweight process (i.e. a thread).
+3. The kernel allocates:
+
+   * A new stack for the thread
+   * Its own thread control block (TCB)
+4. Thread shares:
+
+   * Address space
+   * Open file descriptors
+   * Signals
+   * Heap
+
+So, `pthread_create()` is just a wrapper around `clone()` with additional book keeping (like TLS, pthread ID management, etc.).
+
+## Where Is the Thread Info Stored?
+
+| Component            | Stored In                                       |
+| -------------------- | ----------------------------------------------- |
+| `pthread_t` ID       | Variable in your program                        |
+| Thread stack         | Allocated by kernel or as per attributes        |
+| Return value         | Can be retrieved using `pthread_join()`         |
+| TCB (Thread Control) | Stored in kernel space (`task_struct` in Linux) |
+| /proc info           | See `/proc/<pid>/task/<tid>` directory          |
+
+* `pthread_create()` does not block — it returns immediately, and the thread runs independently.
+* `pthread_join()` is needed to wait for the thread to finish and clean up resources.
+* You can pass data using `void *arg`, cast it to whatever type you need in the thread.
+
 
 ---
 
-## How `pthread_create()` Works Internally
+Here's the **remaining part** of your content in `.md` (Markdown) format, continuing from where we left off:
 
-1. Uses `clone()` with flags:
+````markdown
+# pthread_join()
 
-   * `CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD`
-2. Kernel allocates:
+## 1. What is pthread_join()?
+**Definition:**  
+`pthread_join()` is used by a thread (usually the main thread) to wait for another thread to finish execution.
 
-   * Stack
-   * TCB (Thread Control Block)
-3. Thread shares:
+It ensures that:
+- The calling thread waits until the specified thread terminates.
+- Any return value from the thread can be retrieved.
 
-   * Address space, file descriptors, signals, heap
-
----
-
-## `pthread_join()`
-
-### Prototype:
+## 2. Function Prototype
 
 ```c
 int pthread_join(pthread_t thread, void **retval);
-```
+````
 
-* **Waits** for a specific thread to finish.
-* **Returns** value from the thread function.
-* Cleans up resources (stack, descriptors).
+| Parameter | Description                                                                  |
+| --------- | ---------------------------------------------------------------------------- |
+| thread    | The thread ID to wait for (returned by `pthread_create`)                     |
+| retval    | Pointer to a variable that will hold the thread's return value (can be NULL) |
 
-### Internally:
+## 3. What It Returns
 
-* Uses **futexes** (fast userspace mutexes)
-* Waits on the **thread’s termination flag**
-* Cleans up thread kernel data
+| Return Value | Meaning                |
+| ------------ | ---------------------- |
+| 0            | Success                |
+| ESRCH        | No such thread         |
+| EINVAL       | Thread is not joinable |
+| EDEADLK      | Deadlock detected      |
 
----
+## 4. What pthread\_join() Does Internally
 
-## Simple Example: `pthread_create()` + `pthread_join()`
+Steps:
+
+1. Checks if thread is joinable (i.e., not detached).
+2. Waits (blocks) for the thread to terminate.
+3. Copies the return value (from `pthread_exit()` or function return) into `*retval`.
+4. Cleans up thread resources (thread stack, descriptors).
+5. Internally uses:
+
+   * Futexes (fast userspace mutexes) for blocking/waking.
+   * Waits on thread's termination flag.
+6. It also interacts with kernel's `task_struct` via clone()’d thread.
+
+## Simple Example with pthread\_create() and pthread\_join()
 
 ```c
 #include<stdio.h>
 #include<pthread.h>
-
 void* func(void* arg) {
     printf("Hello from thread!\n");
     return NULL;
 }
-
 int main() {
     pthread_t t1;
     pthread_create(&t1, NULL, func, NULL);
@@ -167,148 +241,128 @@ int main() {
 }
 ```
 
----
+**Output:**
 
-## Advantages of Threads
-
-- Faster than processes (lightweight, quick context switch)
-- Share memory → easy communication between threads
-- Utilizes multiple cores → true parallel execution
-- Low memory & creation cost → efficient
-- Better responsiveness in applications (UI stays responsive)
-- Ideal for I/O-bound, real-time, and multitasking programs
+```
+Hello from thread!
+Thread finished.
+```
 
 ---
 
-##  Thread Failures
+# Advantages of Threads
 
-### 1. `pthread_create()` Failure (Thread Not Created)
-- Reason: Failure during thread creation
-- Causes:
-  - Not enough system resources (`EAGAIN`)
-  - Invalid thread attributes (`EINVAL`)
-  - Lack of permissions (`EPERM`)
+* Faster than processes (lightweight, quick context switch).
+* Share memory, so communication is easy.
+* Use multiple cores → true parallel execution.
+* Low memory & creation cost (efficient).
+* Better responsiveness in apps (UI stays active).
+* Ideal for I/O, real-time, and multitasking.
 
 ---
 
-### 2. Thread Function Crash (Inside Thread)
-- Causes:
-  - Dereferencing invalid pointers (Segmentation Fault)
-  - Stack overflow (e.g., deep recursion)
-  - Use of freed memory or NULL pointers
+# Thread Failures
 
-####  Example:
+## 1. pthread\_create() Failure (Thread Not Created)
+
+**Causes:**
+
+* Not enough system resources (`EAGAIN`)
+* Invalid thread attributes (`EINVAL`)
+* Lack of permissions (`EPERM`)
+
+## 2. Thread Function Crash (Inside Thread)
+
+**Causes:**
+
+* Dereferencing invalid pointers (Segmentation Fault)
+* Stack overflow (Deep recursion)
+* Use of freed memory or NULL pointers.
+
 ```c
 void* thread_func(void* arg) {
     int *ptr = NULL;
     *ptr = 10;  // Crash: Segmentation Fault
 }
-````
+```
 
----
+## 3. Uncaught Exception (C++ Only)
 
-### 3. Uncaught Exception (C++ Only)
+* Throwing an exception inside a thread function without catching it may terminate the program.
 
-* Throwing an exception inside a thread function without catching it may terminate the entire program.
+## 4. Race Conditions / Memory Corruption
 
----
+* Occurs when multiple threads access shared resources without synchronization.
+* Leads to unpredictable results, crashes, or corruption.
 
-### 4. Race Conditions / Memory Corruption
+## 5. Deadlocks
 
-* Happens when multiple threads access shared resources without proper synchronization
-* Leads to:
-
-  * Unpredictable behavior
-  * Crashes
-  * Data corruption
-
----
-
-### 5. Deadlocks
-
-* A thread waits forever for a lock that is never released (held by itself or another thread)
-
-####  Example:
+* A thread waits forever for a lock held by itself or another thread that will never release it.
 
 ```c
 pthread_mutex_lock(&lock);
 // Forgot to unlock → Causes deadlock
 ```
 
----
+## 6. Too Many Threads
 
-### 6. Too Many Threads
-
-* OS limit reached (per-user process limit exceeded)
-* `pthread_create()` fails due to `ulimit` exceeded
-
-Use to check:
+* OS limit reached (per-user process limit).
+* Thread creation fails due to exceeding `ulimit`.
 
 ```bash
 ulimit -u  # Shows maximum user processes (includes threads)
 ```
 
----
+## 7. Resource Leaks (Zombie Threads)
 
-### 7. Resource Leaks (Zombie Threads)
-
-* Happens when threads are created but not joined or detached
-* Results in resource leakage and zombie threads
+* Occurs when threads are not joined (`pthread_join()` not called), causing resource leaks or zombie threads.
 
 ---
 
-## Parallel Execution Example
+# Parallel Execution Example
 
 ```c
-#include <stdio.h>
-#include <unistd.h>
-#include <pthread.h>
+#include<stdio.h>
+#include<unistd.h>
+#include<pthread.h>
 
-void* func(void* arg) {
-    for (int i = 0; i < 10; i++) {
+void* func(void* arg){
+    int i=0;
+    for(i=0;i<10;i++){
         printf("this is thread function\n");
         sleep(1);
     }
-    return NULL;
 }
 
-int main() {
+void main(){
     pthread_t t1;
-    pthread_create(&t1, NULL, func, NULL);
-    // pthread_join(t1, NULL);  // Optional: uncomment to block immediately
-
-    for (int i = 0; i < 10; i++) {
+    pthread_create(&t1,NULL,func,NULL);
+    //pthread_join(t1,NULL);
+    for(int i=0;i<10;i++){
         printf("this is main function\n");
         sleep(1);
     }
-
-    pthread_join(t1, NULL);
-    return 0;
+    pthread_join(t1,NULL);
 }
 ```
 
-### Output:
+**Output:**
 
 ```
 this is main function
 this is thread function
 this is main function
 this is thread function
-...
+....
 this is main function
 this is thread function
-```
-
-* Both the main thread and the created thread execute **in parallel**.
-
 ```
 
 ---
 
+# Passing Argument to Thread
 
-## Passing Arguments to Threads
-
-### Passing a Single Integer
+## Passing a Single Argument
 
 ```c
 #include <stdio.h>
@@ -329,7 +383,15 @@ int main() {
 }
 ```
 
-### Passing Multiple Values (Struct)
+**Output:**
+
+```
+Thread received value: 42
+```
+
+---
+
+## Passing Multiple Arguments Using Structure
 
 ```c
 #include <stdio.h>
@@ -356,9 +418,15 @@ int main() {
 }
 ```
 
+**Output:**
+
+```
+x = 10, y = 3.14, z = A
+```
+
 ---
 
-## Returning Value from a Thread
+# Returning a Value from a Thread
 
 ```c
 #include <stdio.h>
@@ -382,23 +450,27 @@ int main() {
 }
 ```
 
+**Output:**
+
+```
+Returned: 42
+```
+
 ---
 
-## Critical Section
+# Critical Section
+-A critical section is a part of a program (usually a block of code) where shared resources (like variables, files, or devices) are accessed or modified.
 
-> A critical section is a region of code that **accesses shared resources** (variables, memory, files), which must **not be executed by more than one thread at a time**.
-
-### Without Mutex (Race Condition)
+## Without Lock (Race Condition)
 
 ```c
 #include<stdio.h>
-#include<pthread.h>
-
+#include <pthread.h>
 int global_counter = 0;
 
 void* increment(void* arg) {
     for (int i = 0; i < 100000; i++) {
-        global_counter++;  // Unsafe
+        global_counter++;  // No lock!
     }
     return NULL;
 }
@@ -414,12 +486,17 @@ int main() {
 }
 ```
 
-### With Mutex (Safe)
+**Output (inconsistent):**
+
+```
+Final global_counter (no lock): 104178
+```
+
+## With Lock (Mutex)
 
 ```c
 #include <stdio.h>
 #include <pthread.h>
-
 int counter = 0;
 pthread_mutex_t lock;
 
@@ -445,6 +522,137 @@ int main() {
 }
 ```
 
+**Output:**
+
+```
+Final counter value: 200000
+```
+
 ---
+
+# Thread Attributes Summary
+
+In POSIX pthreads, thread attributes are represented using the `pthread_attr_t` structure. These attributes control the behavior of a thread when it's created using `pthread_create()`.
+
+## 1. Detach State
+
+```c
+pthread_attr_t attr;
+pthread_attr_init(&attr);
+pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+// or PTHREAD_CREATE_JOINABLE
+```
+
+* Use detached when you don’t need the thread’s return value.
+* Use joinable when you need to `pthread_join()` later.
+
+## 2. Stack Size
+
+```c
+size_t stack_size = 1024 * 1024;  // 1 MB
+pthread_attr_setstacksize(&attr, stack_size);
+```
+
+* Increase if your thread does deep recursion or allocates large arrays on stack.
+* Default is typically 8 MB on Linux.
+
+## 3. Scheduling Policy
+
+```c
+pthread_attr_setschedpolicy(&attr, SCHED_RR);
+```
+
+* Policies:
+
+  * `SCHED_OTHER`: Default
+  * `SCHED_FIFO`: Real-time FIFO
+  * `SCHED_RR`: Real-time Round Robin
+
+## 4. Scheduling Priority
+
+```c
+struct sched_param param;
+param.sched_priority = 20;
+pthread_attr_setschedparam(&attr, &param);
+```
+
+* Requires a real-time scheduling policy (not SCHED\_OTHER).
+
+## 5. Inherit Scheduling
+
+```c
+pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+// or PTHREAD_INHERIT_SCHED
+```
+
+## 6. Thread Name (Linux-specific)
+
+```c
+pthread_setname_np(pthread_self(), "WorkerThread");
+```
+
+* Useful for debugging (htop, gdb, logs)
+
+## 7. Thread Group (Java-only Concept)
+
+* Not available in C/pthreads.
+* Java allows grouping of threads for management.
+
+---
+
+## Full Example with Thread Attributes
+
+```c
+#include <stdio.h>
+#include <pthread.h>
+#include <sched.h>
+#include <unistd.h>
+
+void* thread_func(void* arg) {
+    printf("Running thread\n");
+    return NULL;
+}
+
+int main() {
+    pthread_t t;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+
+    // Set detached state
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+    // Set stack size
+    pthread_attr_setstacksize(&attr, 1024 * 1024);  // 1MB
+
+    // Set scheduling policy
+    pthread_attr_setschedpolicy(&attr, SCHED_RR);
+
+    // Set scheduling priority
+    struct sched_param param;
+    param.sched_priority = 10;
+    pthread_attr_setschedparam(&attr, &param);
+
+    // Set inherit scheduling to use explicit values
+    pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+
+    pthread_create(&t, &attr, thread_func, NULL);
+    pthread_join(t, NULL);
+
+    pthread_attr_destroy(&attr);
+    return 0;
+}
+```
+
+## Execution:
+
+```bash
+cc thread_attr.c
+sudo ./a.out
+```
+
+**Output:**
+- Running thread
+---
+
 
 
