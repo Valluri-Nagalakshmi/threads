@@ -491,6 +491,9 @@ int main() {
 ```
 Final global_counter (no lock): 104178
 ```
+---
+# Synchronization 
+- A mechanism that controls access to shared resources by multiple threads, ensuring that only one thread can access a critical section at a time, preventing data inconsistency and race conditions. 
 
 ## With Lock (Mutex)
 
