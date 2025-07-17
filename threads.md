@@ -1,10 +1,8 @@
 # Threads
-## What is a Process?
-- A process is an independent program in execution.
-- Has its own memory space and system resources.
-- Can contain multiple threads inside it.
-- Each process is managed by the OS separately.
-> The operating system keeps track of each process using a Process Control Block (PCB).
+## What is a Function?
+- A function is a block of code designed to perform a specific task.
+- It’s used to organize code and avoid repetition.
+- Functions are called by the program to execute certain logic, and they return control back to the caller once done.
 
 ## What is a Thread?
 - A thread is the smallest unit of execution within a process.
@@ -17,11 +15,6 @@
   - Program Counter (PC)
   - Register set
   - Stack (for function calls)
-
-## What is a Function?
-- A function is a block of code designed to perform a specific task.
-- It’s used to organize code and avoid repetition.
-- Functions are called by the program to execute certain logic, and they return control back to the caller once done.
 
 ## Difference Between Functions and Threads
 
@@ -40,6 +33,13 @@
 ### If tasks are independent and CPU/I/O heavy
 - Threads are faster (due to parallel execution)
 - Threads run on multiple cores → simultaneous execution.
+
+## What is a Process?
+- A process is an independent program in execution.
+- Has its own memory space and system resources.
+- Can contain multiple threads inside it.
+- Each process is managed by the OS separately.
+> The operating system keeps track of each process using a Process Control Block (PCB).
 
 ## Difference Between Process and Thread
 
