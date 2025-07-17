@@ -51,14 +51,9 @@
 | Communication    | Complex (needs IPC mechanisms) | Easy (shares memory space)                    |
 | Parallelism      | True parallelism possible (multi-process) | Parallelism within a process (multi-threading) |
 
-### In modern Linux systems, threads ARE provided by the Linux kernel itself.
-- Linux does provide threads, but they are treated as lightweight processes internally.
-- In Linux, threads are implemented using kernel-level mechanisms.
-- Specifically, Linux uses the `clone()` system call to create threads.
-- You don't directly call `clone()` in most applications.
-- Instead, you use a thread library like pthreads (POSIX Threads).
-- `pthread` provides easy APIs like `pthread_create()` to create threads.
-- Internally, pthreads uses the Linux `clone()` system call to create threads.
+- In Linux, threads are created and managed by the kernel (not just user-space).
+- The pthread_create() function (from the pthread library) is used to make threads in your code.
+- Behind the scenes, pthread_create() uses the clone() system call to create threads at the kernel level.
 
 ## Why We Don't Directly Use `clone()` for Threads:
 
@@ -135,6 +130,7 @@ Use it like:
 ```c
 if (pthread_create(&tid, NULL, my_function, NULL) != 0) {
     perror("Thread creation failed");
+    pthread_exit(NULL);
 }
 ```
 
