@@ -166,13 +166,8 @@ int pthread_join(pthread_t thread, void **retval);
 
 ## 3. What It Returns
 
-| Return Value | Meaning                |
-| ------------ | ---------------------- |
-| 0            | Success                |
-| ESRCH        | No such thread         |
-| EINVAL       | Thread is not joinable |
-| EDEADLK      | Deadlock detected      |
-
+* `0` → Success
+* Non-zero → Error
 
 ## Simple Example with pthread\_create() and pthread\_join()
 
