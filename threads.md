@@ -76,12 +76,6 @@
   - Synchronize threads (`pthread_join`, mutexes, condition variables)
   - Manage thread attributes (stack size, detach state, etc.)
 
-## Why Use pthread?
-- To write parallel or concurrent programs.
-- Makes efficient use of multi-core CPUs.
-- Handles background tasks, I/O, computation-heavy tasks in separate threads.
-- Used in system software, networking apps, embedded systems, etc.
-
 ## Example pthread Functions
 
 | Function             | Purpose                                                                           |
