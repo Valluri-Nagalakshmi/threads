@@ -173,19 +173,6 @@ int pthread_join(pthread_t thread, void **retval);
 | EINVAL       | Thread is not joinable |
 | EDEADLK      | Deadlock detected      |
 
-## 4. What pthread\_join() Does Internally
-
-Steps:
-
-1. Checks if thread is joinable (i.e., not detached).
-2. Waits (blocks) for the thread to terminate.
-3. Copies the return value (from `pthread_exit()` or function return) into `*retval`.
-4. Cleans up thread resources (thread stack, descriptors).
-5. Internally uses:
-
-   * Futexes (fast userspace mutexes) for blocking/waking.
-   * Waits on thread's termination flag.
-6. It also interacts with kernel's `task_struct` via clone()’d thread.
 
 ## Simple Example with pthread\_create() and pthread\_join()
 
