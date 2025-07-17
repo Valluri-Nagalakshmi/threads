@@ -136,12 +136,10 @@ if (pthread_create(&tid, NULL, my_function, NULL) != 0) {
 | Thread stack         | Allocated by kernel or as per attributes        |
 | Return value         | Can be retrieved using `pthread_join()`         |
 | TCB (Thread Control) | Stored in kernel space (`task_struct` in Linux) |
-| /proc info           | See `/proc/<pid>/task/<tid>` directory          |
 
 * `pthread_create()` does not block — it returns immediately, and the thread runs independently.
 * `pthread_join()` is needed to wait for the thread to finish and clean up resources.
 * You can pass data using `void *arg`, cast it to whatever type you need in the thread.
-
 
 ---
 
