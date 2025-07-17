@@ -128,27 +128,6 @@ if (pthread_create(&tid, NULL, my_function, NULL) != 0) {
 }
 ```
 
-## 4. How `pthread_create()` Internally Works
-
-Internally:
-
-1. `pthread_create()` calls the `clone()` system call (not `fork()`).
-2. It passes special flags like:
-   `CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD`
-   → These tell the kernel to create a lightweight process (i.e. a thread).
-3. The kernel allocates:
-
-   * A new stack for the thread
-   * Its own thread control block (TCB)
-4. Thread shares:
-
-   * Address space
-   * Open file descriptors
-   * Signals
-   * Heap
-
-So, `pthread_create()` is just a wrapper around `clone()` with additional book keeping (like TLS, pthread ID management, etc.).
-
 ## Where Is the Thread Info Stored?
 
 | Component            | Stored In                                       |
